@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veux-tu te marier avec moi ? 💍</title>
+
 <style>
     :root {
         --primary-pink: #ff6584;
@@ -328,6 +329,7 @@
     const canvas = document.getElementById('heart-canvas');
     const ctx = canvas.getContext('2d');
 
+
     // =========================================
     // CANVAS
     // =========================================
@@ -342,40 +344,50 @@
 
 
     // =========================================
-    // POSITION DU BOUTON "NON"
+    // POSITION INITIALE DU BOUTON "NON"
     // =========================================
 
-    let originalX = 0;
-    let originalY = 0;
+    let originalCenterX = 0;
+    let originalCenterY = 0;
     let buttonInitialized = false;
+
 
     function saveOriginalPosition() {
 
-        // On remet temporairement le bouton dans son emplacement normal
-        btnNo.style.position = 'static';
-        btnNo.style.left = '';
-        btnNo.style.top = '';
-        btnNo.style.transform = '';
+        /*
+         * IMPORTANT :
+         * On sauvegarde la position uniquement une fois.
+         * On ne la recalcule pas après chaque mouvement.
+         */
+
+        if (buttonInitialized) {
+            return;
+        }
 
         const rect = btnNo.getBoundingClientRect();
 
-        originalX = rect.left;
-        originalY = rect.top;
+        // Centre du bouton
+        originalCenterX = rect.left + rect.width / 2;
+        originalCenterY = rect.top + rect.height / 2;
 
         buttonInitialized = true;
+
+        console.log(
+            'Position initiale du bouton :',
+            originalCenterX,
+            originalCenterY
+        );
     }
 
+
+    // Attendre que la page soit complètement chargée
     window.addEventListener('load', saveOriginalPosition);
 
-    // Recalculer après redimensionnement de l'écran
-    window.addEventListener('resize', () => {
 
-        if (!buttonInitialized) return;
-
-        setTimeout(() => {
-            saveOriginalPosition();
-        }, 100);
-    });
+    // Sécurité si le script est exécuté après le chargement
+    if (document.readyState === 'complete') {
+        saveOriginalPosition();
+    }
 
 
     // =========================================
@@ -384,41 +396,80 @@
 
     function moveNoButton() {
 
+        // Si la position initiale n'est pas encore enregistrée
         if (!buttonInitialized) {
             saveOriginalPosition();
         }
 
+
+        // Le bouton devient indépendant du layout
         btnNo.style.position = 'fixed';
+
 
         const buttonWidth = btnNo.offsetWidth;
         const buttonHeight = btnNo.offsetHeight;
 
-        const margin = 15;
+        const margin = 10;
 
-        // Zone maximale autour de la position originale
-        const maxDistance = 140;
+        // =========================================
+        // DISTANCE MAXIMALE
+        // =========================================
 
-        // Position aléatoire
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 70 + Math.random() * 70;
+        const MAX_DISTANCE = 150;
 
-        let x =
-            originalX +
+
+        // =========================================
+        // NOUVELLE POSITION ALÉATOIRE
+        // =========================================
+
+        const angle =
+            Math.random() * Math.PI * 2;
+
+        /*
+         * Distance entre 60px et 150px.
+         *
+         * Le bouton ne pourra donc jamais
+         * dépasser 150px du centre initial.
+         */
+        const distance =
+            60 + Math.random() * (MAX_DISTANCE - 60);
+
+
+        // Nouveau centre
+        let newCenterX =
+            originalCenterX +
             Math.cos(angle) * distance;
 
-        let y =
-            originalY +
+        let newCenterY =
+            originalCenterY +
             Math.sin(angle) * distance;
+
+
+        // =========================================
+        // CONVERSION CENTRE -> COIN SUPÉRIEUR GAUCHE
+        // =========================================
+
+        let x =
+            newCenterX -
+            buttonWidth / 2;
+
+        let y =
+            newCenterY -
+            buttonHeight / 2;
 
 
         // =========================================
         // LIMITES DE L'ÉCRAN
         // =========================================
 
+        const minX = margin;
+
         const maxX =
             window.innerWidth -
             buttonWidth -
             margin;
+
+        const minY = margin;
 
         const maxY =
             window.innerHeight -
@@ -426,49 +477,94 @@
             margin;
 
 
-        // Empêcher de sortir de l'écran
+        /*
+         * Garder le bouton entièrement visible.
+         */
         x = Math.max(
-            margin,
+            minX,
             Math.min(x, maxX)
         );
 
         y = Math.max(
-            margin,
+            minY,
             Math.min(y, maxY)
         );
 
 
         // =========================================
-        // GARANTIR UNE DISTANCE MAXIMALE
+        // GARANTIE ABSOLUE DES 150 PX
         // =========================================
 
-        const dx = x - originalX;
-        const dy = y - originalY;
+        /*
+         * Après avoir appliqué les limites de l'écran,
+         * on recalcule la distance entre le centre
+         * actuel et le centre initial.
+         */
 
-        const currentDistance =
-            Math.sqrt(dx * dx + dy * dy);
+        let finalCenterX =
+            x + buttonWidth / 2;
 
-        if (currentDistance > maxDistance) {
+        let finalCenterY =
+            y + buttonHeight / 2;
+
+
+        let dx =
+            finalCenterX -
+            originalCenterX;
+
+        let dy =
+            finalCenterY -
+            originalCenterY;
+
+
+        let finalDistance =
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
+
+
+        /*
+         * Si la distance dépasse 150px,
+         * on ramène exactement à 150px.
+         */
+        if (finalDistance > MAX_DISTANCE) {
 
             const ratio =
-                maxDistance / currentDistance;
+                MAX_DISTANCE /
+                finalDistance;
 
-            x =
-                originalX +
+
+            finalCenterX =
+                originalCenterX +
                 dx * ratio;
 
-            y =
-                originalY +
+            finalCenterY =
+                originalCenterY +
                 dy * ratio;
+
+
+            x =
+                finalCenterX -
+                buttonWidth / 2;
+
+            y =
+                finalCenterY -
+                buttonHeight / 2;
         }
 
 
-        // Re-vérification des limites
+        // =========================================
+        // DERNIÈRE SÉCURITÉ ÉCRAN
+        // =========================================
+
         x = Math.max(
             margin,
             Math.min(
                 x,
-                window.innerWidth - buttonWidth - margin
+                window.innerWidth -
+                buttonWidth -
+                margin
             )
         );
 
@@ -476,27 +572,41 @@
             margin,
             Math.min(
                 y,
-                window.innerHeight - buttonHeight - margin
+                window.innerHeight -
+                buttonHeight -
+                margin
             )
         );
 
 
         // =========================================
-        // APPLICATION
+        // APPLICATION DE LA POSITION
         // =========================================
 
-        btnNo.style.left = `${x}px`;
-        btnNo.style.top = `${y}px`;
+        btnNo.style.left =
+            `${x}px`;
 
-        btnNo.style.transform = 'scale(1.08)';
+        btnNo.style.top =
+            `${y}px`;
 
-        clearTimeout(btnNo._scaleTimeout);
 
-        btnNo._scaleTimeout = setTimeout(() => {
+        // Petit effet de déplacement
+        btnNo.style.transform =
+            'scale(1.08)';
 
-            btnNo.style.transform = 'scale(1)';
 
-        }, 150);
+        clearTimeout(
+            btnNo._scaleTimeout
+        );
+
+
+        btnNo._scaleTimeout =
+            setTimeout(() => {
+
+                btnNo.style.transform =
+                    'scale(1)';
+
+            }, 150);
     }
 
 
@@ -576,6 +686,7 @@
 
     let particles = [];
 
+
     class HeartParticle {
 
         constructor() {
@@ -609,19 +720,30 @@
                 (Math.random() - 0.5) * 0.08;
         }
 
+
         draw() {
 
             ctx.save();
 
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rotation);
+            ctx.translate(
+                this.x,
+                this.y
+            );
 
-            ctx.globalAlpha = this.opacity;
-            ctx.fillStyle = this.color;
+            ctx.rotate(
+                this.rotation
+            );
+
+            ctx.globalAlpha =
+                this.opacity;
+
+            ctx.fillStyle =
+                this.color;
 
             ctx.beginPath();
 
-            const d = this.size;
+            const d =
+                this.size;
 
             ctx.moveTo(0, 0);
 
@@ -648,14 +770,20 @@
             ctx.restore();
         }
 
+
         update() {
 
-            this.x += this.speedX;
-            this.y += this.speedY;
+            this.x +=
+                this.speedX;
 
-            this.rotation += this.rotationSpeed;
+            this.y +=
+                this.speedY;
 
-            this.opacity -= 0.008;
+            this.rotation +=
+                this.rotationSpeed;
+
+            this.opacity -=
+                0.008;
         }
     }
 
@@ -663,6 +791,7 @@
     function triggerLoveAnimation() {
 
         particles = [];
+
 
         for (let i = 0; i < 100; i++) {
 
@@ -681,25 +810,38 @@
                 canvas.height
             );
 
+
             particles.forEach(
                 (particle, index) => {
 
                     particle.update();
+
                     particle.draw();
 
-                    if (particle.opacity <= 0) {
 
-                        particles.splice(index, 1);
+                    if (
+                        particle.opacity <= 0
+                    ) {
+
+                        particles.splice(
+                            index,
+                            1
+                        );
                     }
                 }
             );
 
 
-            if (particles.length > 0) {
+            if (
+                particles.length > 0
+            ) {
 
-                requestAnimationFrame(animate);
+                requestAnimationFrame(
+                    animate
+                );
             }
         }
+
 
         animate();
     }
@@ -713,9 +855,11 @@
         'click',
         () => {
 
-            formContainer.style.display = 'none';
+            formContainer.style.display =
+                'none';
 
-            successMessage.style.display = 'block';
+            successMessage.style.display =
+                'block';
 
             triggerLoveAnimation();
 
@@ -723,7 +867,6 @@
     );
 
 </script>
-
 
 </body>
 </html>
