@@ -1,366 +1,729 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veux-tu te marier avec moi ? 💍</title>
-    <style>
-        :root {
-            --primary-pink: #ff6584;
-            --light-pink: #ffe3e6;
-            --dark-pink: #d94161;
-            --white: #ffffff;
-            --text-color: #5a2a34;
+<style>
+    :root {
+        --primary-pink: #ff6584;
+        --light-pink: #ffe3e6;
+        --dark-pink: #d94161;
+        --white: #ffffff;
+        --text-color: #5a2a34;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #ffd1dc 0%, #ff9a9e 100%);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        color: var(--text-color);
+    }
+
+    #heart-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 99;
+    }
+
+    .container {
+        background: rgba(255, 255, 255, 0.85);
+        padding: 40px;
+        border-radius: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        max-width: 450px;
+        width: 90%;
+        position: relative;
+        backdrop-filter: blur(5px);
+        z-index: 1;
+    }
+
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 30px;
+        color: var(--dark-pink);
+    }
+
+    .buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        position: relative;
+        height: 60px;
+        align-items: center;
+    }
+
+    button {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #btn-yes {
+        background-color: var(--primary-pink);
+        color: var(--white);
+        transition: transform 0.2s, background-color 0.2s;
+        z-index: 2;
+    }
+
+    #btn-yes:hover {
+        background-color: var(--dark-pink);
+        transform: scale(1.1);
+    }
+
+    /* ==============================
+       BOUTON NON
+       ============================== */
+
+    #btn-no {
+        background-color: #e0e0e0;
+        color: #555;
+        z-index: 10;
+
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+
+        transition:
+            left 0.25s ease,
+            top 0.25s ease,
+            transform 0.15s ease;
+    }
+
+    /* ==============================
+       MODAL
+       ============================== */
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 20;
+    }
+
+    .modal-content {
+        background: var(--white);
+        padding: 30px;
+        border-radius: 20px;
+        width: 85%;
+        max-width: 400px;
+        text-align: left;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        animation: popIn 0.3s ease-out;
+    }
+
+    @keyframes popIn {
+        0% {
+            transform: scale(0.8);
+            opacity: 0;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ffd1dc 0%, #ff9a9e 100%);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            color: var(--text-color);
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .modal-content h2 {
+        color: var(--primary-pink);
+        margin-top: 0;
+        text-align: center;
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    input[type="date"],
+    select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid var(--light-pink);
+        border-radius: 10px;
+        font-size: 1rem;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    input[type="date"]:focus,
+    select:focus {
+        border-color: var(--primary-pink);
+    }
+
+    #btn-submit {
+        background-color: var(--primary-pink);
+        color: var(--white);
+        width: 100%;
+        margin-top: 10px;
+        transition: background-color 0.2s, transform 0.2s;
+    }
+
+    #btn-submit:hover {
+        background-color: var(--dark-pink);
+        transform: scale(1.02);
+    }
+
+    #success-message {
+        display: none;
+        text-align: center;
+        animation: fadeIn 0.5s ease;
+    }
+
+    #success-message h2 {
+        color: var(--primary-pink);
+        font-size: 1.8rem;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
         }
 
-        /* Canvas pour l'animation de fond */
-        #heart-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 99;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
+    }
+</style>
 
-        .container {
-            background: rgba(255, 255, 255, 0.85);
-            padding: 40px;
-            border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            text-align: center;
-            max-width: 450px;
-            width: 90%;
-            position: relative;
-            backdrop-filter: blur(5px);
-            z-index: 1;
-        }
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: var(--dark-pink);
-        }
-
-        .buttons-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            position: relative;
-            height: 60px;
-            align-items: center;
-        }
-
-        button {
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        #btn-yes {
-            background-color: var(--primary-pink);
-            color: var(--white);
-            transition: transform 0.2s, background-color 0.2s;
-            z-index: 2;
-        }
-
-        #btn-yes:hover {
-            background-color: var(--dark-pink);
-            transform: scale(1.1);
-        }
-
-        #btn-no {
-            background-color: #e0e0e0;
-            color: #555;
-            z-index: 10;
-            /* Transition fluide lors du déplacement du bouton */
-            transition: left 0.3s ease, top 0.3s ease, transform 0.2s;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-        }
-
-        .modal-content {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 20px;
-            width: 85%;
-            max-width: 400px;
-            text-align: left;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            animation: popIn 0.3s ease-out;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .modal-content h2 {
-            color: var(--primary-pink);
-            margin-top: 0;
-            text-align: center;
-            font-size: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        input[type="date"], select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid var(--light-pink);
-            border-radius: 10px;
-            font-size: 1rem;
-            outline: none;
-            box-sizing: border-box;
-        }
-
-        input[type="date"]:focus, select:focus {
-            border-color: var(--primary-pink);
-        }
-
-        #btn-submit {
-            background-color: var(--primary-pink);
-            color: var(--white);
-            width: 100%;
-            margin-top: 10px;
-            transition: background-color 0.2s, transform 0.2s;
-        }
-
-        #btn-submit:hover {
-            background-color: var(--dark-pink);
-            transform: scale(1.02);
-        }
-
-        #success-message {
-            display: none;
-            text-align: center;
-            animation: fadeIn 0.5s ease;
-        }
-
-        #success-message h2 {
-            color: var(--primary-pink);
-            font-size: 1.8rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
 </head>
+
 <body>
 
-    <canvas id="heart-canvas"></canvas>
 
-    <div class="container">
-        <h1>Veux-tu te marier avec moi ? ❤️</h1>
-        <div class="buttons-container">
-            <button id="btn-yes">Oui 🥰</button>
-            <button id="btn-no">Non 😜</button>
-        </div>
+<canvas id="heart-canvas"></canvas>
+
+<div class="container">
+
+    <h1>Veux-tu te marier avec moi ? ❤️</h1>
+
+    <div class="buttons-container">
+        <button id="btn-yes">Oui 🥰</button>
+        <button id="btn-no">Non 😜</button>
     </div>
 
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <div id="form-container">
-                <h2>Yay ! 🎉 Planifions notre futur</h2>
-                <div class="form-group">
-                    <label for="wedding-date">Date du mariage :</label>
-                    <input type="date" id="wedding-date">
-                </div>
-                <div class="form-group">
-                    <label for="kids-count">Combien d'enfants :</label>
-                    <select id="kids-count">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4+</option>
-                        <option value="5">Une équipe de foot (11)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="first-child">Premier né fille ou garçon ?</label>
-                    <select id="first-child">
-                        <option value="Fille">Une petite princesse (Fille) 👧</option>
-                        <option value="Garçon">Un petit champion (Garçon) 👦</option>
-                        <option value="Peu importe">Peu importe, tant qu'il est en bonne santé 👶</option>
-                    </select>
-                </div>
-                <button id="btn-submit">Valider notre avenir ✨</button>
+</div>
+
+
+<!-- ==============================
+     MODAL
+     ============================== -->
+
+<div class="modal" id="modal">
+
+    <div class="modal-content">
+
+        <div id="form-container">
+
+            <h2>Yay ! 🎉 Planifions notre futur</h2>
+
+            <div class="form-group">
+                <label for="wedding-date">
+                    Date du mariage :
+                </label>
+
+                <input type="date" id="wedding-date">
             </div>
 
-            <div id="success-message">
-                <h2>C'est officiel ! 💍✨</h2>
-                <p>J'ai hâte de passer le reste de ma vie avec toi mon amour ! ❤️</p>
+            <div class="form-group">
+
+                <label for="kids-count">
+                    Combien d'enfants :
+                </label>
+
+                <select id="kids-count">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4+</option>
+                    <option value="5">
+                        Une équipe de foot (11)
+                    </option>
+                </select>
+
             </div>
+
+            <div class="form-group">
+
+                <label for="first-child">
+                    Premier né fille ou garçon ?
+                </label>
+
+                <select id="first-child">
+                    <option value="Fille">
+                        Une petite princesse (Fille) 👧
+                    </option>
+
+                    <option value="Garçon">
+                        Un petit champion (Garçon) 👦
+                    </option>
+
+                    <option value="Peu importe">
+                        Peu importe, tant qu'il est en bonne santé 👶
+                    </option>
+                </select>
+
+            </div>
+
+            <button id="btn-submit">
+                Valider notre avenir ✨
+            </button>
+
         </div>
+
+
+        <div id="success-message">
+
+            <h2>C'est officiel ! 💍✨</h2>
+
+            <p>
+                J'ai hâte de passer le reste de ma vie avec toi mon amour ! ❤️
+            </p>
+
+        </div>
+
     </div>
 
-    <script>
-        const btnNo = document.getElementById('btn-no');
-        const btnYes = document.getElementById('btn-yes');
-        const modal = document.getElementById('modal');
-        const btnSubmit = document.getElementById('btn-submit');
-        const formContainer = document.getElementById('form-container');
-        const successMessage = document.getElementById('success-message');
-        const canvas = document.getElementById('heart-canvas');
-        const ctx = canvas.getContext('2d');
+</div>
+<script>
+    const btnNo = document.getElementById('btn-no');
+    const btnYes = document.getElementById('btn-yes');
+    const modal = document.getElementById('modal');
+    const btnSubmit = document.getElementById('btn-submit');
+    const formContainer = document.getElementById('form-container');
+    const successMessage = document.getElementById('success-message');
 
-        // Ajustement automatique du canvas
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    const canvas = document.getElementById('heart-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // =========================================
+    // CANVAS
+    // =========================================
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+
+    // =========================================
+    // POSITION DU BOUTON "NON"
+    // =========================================
+
+    let originalX = 0;
+    let originalY = 0;
+    let buttonInitialized = false;
+
+    function saveOriginalPosition() {
+
+        // On remet temporairement le bouton dans son emplacement normal
+        btnNo.style.position = 'static';
+        btnNo.style.left = '';
+        btnNo.style.top = '';
+        btnNo.style.transform = '';
+
+        const rect = btnNo.getBoundingClientRect();
+
+        originalX = rect.left;
+        originalY = rect.top;
+
+        buttonInitialized = true;
+    }
+
+    window.addEventListener('load', saveOriginalPosition);
+
+    // Recalculer après redimensionnement de l'écran
+    window.addEventListener('resize', () => {
+
+        if (!buttonInitialized) return;
+
+        setTimeout(() => {
+            saveOriginalPosition();
+        }, 100);
+    });
+
+
+    // =========================================
+    // BOUTON "NON"
+    // =========================================
+
+    function moveNoButton() {
+
+        if (!buttonInitialized) {
+            saveOriginalPosition();
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
 
-        // Éviter le bouton "Non" en le gardant STRICTEMENT dans le cadre visible
-       // Le bouton fait un petit saut local sans jamais sortir du cadre visible
-function evadeMouse() {
-    btnNo.style.position = 'fixed';
-    
-    const margin = 20; // Distance minimale par rapport aux bords de l'écran
-    const maxX = window.innerWidth - btnNo.offsetWidth - margin;
-    const maxY = window.innerHeight - btnNo.offsetHeight - margin;
-    
-    // Position actuelle du bouton
-    const rect = btnNo.getBoundingClientRect();
-    
-    // Déplacement court (entre 80px et 150px autour du bouton)
-    const distance = 80 + Math.random() * 70;
-    const angle = Math.random() * Math.PI * 2;
-    
-    let x = rect.left + Math.cos(angle) * distance;
-    let y = rect.top + Math.sin(angle) * distance;
-    
-    // Verrouillage STRICT dans la zone visible du navigateur
-    x = Math.max(margin, Math.min(x, maxX));
-    y = Math.max(margin, Math.min(y, maxY));
-    
-    btnNo.style.left = `${x}px`;
-    btnNo.style.top = `${y}px`;
-}
+        btnNo.style.position = 'fixed';
 
-        btnNo.addEventListener('mouseenter', evadeMouse);
-        btnNo.addEventListener('click', evadeMouse);
-        btnNo.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            evadeMouse();
-        });
+        const buttonWidth = btnNo.offsetWidth;
+        const buttonHeight = btnNo.offsetHeight;
 
-        // Clic sur "Oui"
-        btnYes.addEventListener('click', () => {
+        const margin = 15;
+
+        // Zone maximale autour de la position originale
+        const maxDistance = 140;
+
+        // Position aléatoire
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 70 + Math.random() * 70;
+
+        let x =
+            originalX +
+            Math.cos(angle) * distance;
+
+        let y =
+            originalY +
+            Math.sin(angle) * distance;
+
+
+        // =========================================
+        // LIMITES DE L'ÉCRAN
+        // =========================================
+
+        const maxX =
+            window.innerWidth -
+            buttonWidth -
+            margin;
+
+        const maxY =
+            window.innerHeight -
+            buttonHeight -
+            margin;
+
+
+        // Empêcher de sortir de l'écran
+        x = Math.max(
+            margin,
+            Math.min(x, maxX)
+        );
+
+        y = Math.max(
+            margin,
+            Math.min(y, maxY)
+        );
+
+
+        // =========================================
+        // GARANTIR UNE DISTANCE MAXIMALE
+        // =========================================
+
+        const dx = x - originalX;
+        const dy = y - originalY;
+
+        const currentDistance =
+            Math.sqrt(dx * dx + dy * dy);
+
+        if (currentDistance > maxDistance) {
+
+            const ratio =
+                maxDistance / currentDistance;
+
+            x =
+                originalX +
+                dx * ratio;
+
+            y =
+                originalY +
+                dy * ratio;
+        }
+
+
+        // Re-vérification des limites
+        x = Math.max(
+            margin,
+            Math.min(
+                x,
+                window.innerWidth - buttonWidth - margin
+            )
+        );
+
+        y = Math.max(
+            margin,
+            Math.min(
+                y,
+                window.innerHeight - buttonHeight - margin
+            )
+        );
+
+
+        // =========================================
+        // APPLICATION
+        // =========================================
+
+        btnNo.style.left = `${x}px`;
+        btnNo.style.top = `${y}px`;
+
+        btnNo.style.transform = 'scale(1.08)';
+
+        clearTimeout(btnNo._scaleTimeout);
+
+        btnNo._scaleTimeout = setTimeout(() => {
+
+            btnNo.style.transform = 'scale(1)';
+
+        }, 150);
+    }
+
+
+    // =========================================
+    // SOURIS
+    // =========================================
+
+    btnNo.addEventListener(
+        'mouseenter',
+        moveNoButton
+    );
+
+
+    // =========================================
+    // EMPÊCHER LE CLIC
+    // =========================================
+
+    btnNo.addEventListener(
+        'mousedown',
+        function(event) {
+
+            event.preventDefault();
+
+            moveNoButton();
+        }
+    );
+
+
+    btnNo.addEventListener(
+        'click',
+        function(event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            moveNoButton();
+        }
+    );
+
+
+    // =========================================
+    // MOBILE / TABLETTE
+    // =========================================
+
+    btnNo.addEventListener(
+        'touchstart',
+        function(event) {
+
+            event.preventDefault();
+
+            moveNoButton();
+
+        },
+        {
+            passive: false
+        }
+    );
+
+
+    // =========================================
+    // BOUTON OUI
+    // =========================================
+
+    btnYes.addEventListener(
+        'click',
+        () => {
+
             modal.style.display = 'flex';
-        });
 
-        // Animation moderne de cœurs au format Canvas
-        let particles = [];
-        class HeartParticle {
-            constructor() {
-                this.x = window.innerWidth / 2 + (Math.random() - 0.5) * 200;
-                this.y = window.innerHeight / 2 + (Math.random() - 0.5) * 100;
-                this.size = Math.random() * 15 + 10;
-                this.speedY = -(Math.random() * 4 + 2);
-                this.speedX = (Math.random() - 0.5) * 3;
-                this.opacity = 1;
-                this.color = `hsl(${Math.random() * 20 + 340}, 100%, 65%)`;
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.08;
-            }
+        }
+    );
 
-            draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation);
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
-                
-                // Dessin d'un cœur parfait
-                ctx.beginPath();
-                const d = this.size;
-                ctx.moveTo(0, 0);
-                ctx.bezierCurveTo(-d / 2, -d / 2, -d, d / 3, 0, d);
-                ctx.bezierCurveTo(d, d / 3, d / 2, -d / 2, 0, 0);
-                ctx.fill();
-                ctx.restore();
-            }
 
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.rotation += this.rotationSpeed;
-                this.opacity -= 0.008;
-            }
+    // =========================================
+    // ANIMATION DES COEURS
+    // =========================================
+
+    let particles = [];
+
+    class HeartParticle {
+
+        constructor() {
+
+            this.x =
+                window.innerWidth / 2 +
+                (Math.random() - 0.5) * 200;
+
+            this.y =
+                window.innerHeight / 2 +
+                (Math.random() - 0.5) * 100;
+
+            this.size =
+                Math.random() * 15 + 10;
+
+            this.speedY =
+                -(Math.random() * 4 + 2);
+
+            this.speedX =
+                (Math.random() - 0.5) * 3;
+
+            this.opacity = 1;
+
+            this.color =
+                `hsl(${Math.random() * 20 + 340}, 100%, 65%)`;
+
+            this.rotation =
+                Math.random() * Math.PI * 2;
+
+            this.rotationSpeed =
+                (Math.random() - 0.5) * 0.08;
         }
 
-        function triggerLoveAnimation() {
-            particles = [];
-            for (let i = 0; i < 100; i++) {
-                particles.push(new HeartParticle());
-            }
+        draw() {
 
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach((particle, index) => {
+            ctx.save();
+
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = this.color;
+
+            ctx.beginPath();
+
+            const d = this.size;
+
+            ctx.moveTo(0, 0);
+
+            ctx.bezierCurveTo(
+                -d / 2,
+                -d / 2,
+                -d,
+                d / 3,
+                0,
+                d
+            );
+
+            ctx.bezierCurveTo(
+                d,
+                d / 3,
+                d / 2,
+                -d / 2,
+                0,
+                0
+            );
+
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        update() {
+
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            this.rotation += this.rotationSpeed;
+
+            this.opacity -= 0.008;
+        }
+    }
+
+
+    function triggerLoveAnimation() {
+
+        particles = [];
+
+        for (let i = 0; i < 100; i++) {
+
+            particles.push(
+                new HeartParticle()
+            );
+        }
+
+
+        function animate() {
+
+            ctx.clearRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            particles.forEach(
+                (particle, index) => {
+
                     particle.update();
                     particle.draw();
+
                     if (particle.opacity <= 0) {
+
                         particles.splice(index, 1);
                     }
-                });
-
-                if (particles.length > 0) {
-                    requestAnimationFrame(animate);
                 }
+            );
+
+
+            if (particles.length > 0) {
+
+                requestAnimationFrame(animate);
             }
-            animate();
         }
 
-        // Validation du formulaire
-        btnSubmit.addEventListener('click', () => {
+        animate();
+    }
+
+
+    // =========================================
+    // VALIDATION
+    // =========================================
+
+    btnSubmit.addEventListener(
+        'click',
+        () => {
+
             formContainer.style.display = 'none';
+
             successMessage.style.display = 'block';
+
             triggerLoveAnimation();
-        });
-    </script>
+
+        }
+    );
+
+</script>
+
+
 </body>
 </html>
